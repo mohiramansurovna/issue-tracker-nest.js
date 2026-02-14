@@ -1,0 +1,41 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - link "Issue tracker :)" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - heading "Issue tracker :)" [level=1] [ref=e6]
+      - navigation [ref=e7]:
+        - button [ref=e8]:
+          - img
+        - link "Sign Up" [ref=e9] [cursor=pointer]:
+          - /url: /register
+          - button "Sign Up" [ref=e10]
+        - link "Log In" [ref=e11] [cursor=pointer]:
+          - /url: /login
+          - button "Log In" [ref=e12]
+    - generic [ref=e15]:
+      - generic [ref=e17]: Sign up
+      - generic [ref=e20]:
+        - group [ref=e21]:
+          - generic [ref=e22]: Email
+          - textbox "Email" [active] [ref=e23]:
+            - /placeholder: example@mail.com
+            - text: test@gmail.com
+        - group [ref=e24]:
+          - generic [ref=e25]: Password
+          - textbox "Password" [ref=e26]:
+            - /placeholder: "********"
+          - paragraph [ref=e27]: "Password requirements: 8+ characters, uppercase, lowercase, number, special character"
+        - group [ref=e28]:
+          - generic [ref=e29]: Confirm Password
+          - textbox "Confirm Password" [ref=e30]:
+            - /placeholder: "********"
+          - paragraph [ref=e31]: Repeat the password
+      - group [ref=e33]:
+        - button "Reset" [ref=e34]
+        - button "Submit" [ref=e35]
+  - region "Notifications alt+T"
+```

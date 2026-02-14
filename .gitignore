@@ -1,0 +1,63 @@
+# ===== OS / Editors =====
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ===== Logs =====
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== Env / Secrets =====
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# ===== Node =====
+node_modules/
+**/node_modules/
+
+# ===== Build outputs =====
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+coverage/
+**/coverage/
+
+# ===== NestJS =====
+backend/.nest/
+**/.nest/
+**/*.tsbuildinfo
+
+# ===== Vite / React =====
+frontend/.vite/
+**/.vite/
+
+# ===== Cache =====
+.cache/
+**/.cache/
+.tmp/
+**/.tmp/
+
+# ===== Package manager =====
+.pnpm-store/
+.yarn/
+.yarnrc.yml
+
+# ===== Docker (optional) =====
+**/.dockerignore
+
+# ===== Runtime uploads (if any) =====
+uploads/
+**/uploads/
