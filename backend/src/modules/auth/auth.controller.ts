@@ -23,12 +23,15 @@ export class AuthController {
     @Body() body: RegisterDto,
   ) {
     const { accessToken, user } = await this.authService.register(body);
+    const isProd = process.env.NODE_ENV === 'production';
+
     res.cookie('access-token', accessToken, {
       httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-      maxAge: 1000 * 60 * 24 * 7
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
     });
+
     return user;
   }
 
@@ -38,12 +41,15 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { accessToken, user } = await this.authService.login(body);
-    res.cookie('access-token', accessToken, {
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-      maxAge:1000*60*24*7
-    });
+   const isProd = process.env.NODE_ENV === 'production';
+
+   res.cookie('access-token', accessToken, {
+     httpOnly: true,
+     secure: isProd,
+     sameSite: isProd ? 'none' : 'lax',
+     maxAge: 1000 * 60 * 60 * 24 * 7,
+   });
+
     return user;
   }
 

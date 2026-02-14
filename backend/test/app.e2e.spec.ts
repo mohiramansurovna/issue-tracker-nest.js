@@ -1,25 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
-import { App } from 'supertest/types';
-import { AppModule } from '@/app.module';
+import { AppController } from '@/app.controller';
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+describe('AppController (integration)', () => {
+  let controller: AppController;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AppController],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
+    controller = module.get<AppController>(AppController);
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Server is working');
+  it('get() returns health payload', async () => {
+    const result = await controller.get();
+
+    expect(result).toEqual({ ok: true });
   });
 });

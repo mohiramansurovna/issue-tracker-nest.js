@@ -1,0 +1,470 @@
+openapi: 3.0.3
+info:
+  title: Issue Tracker API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+tags:
+  - name: health
+  - name: auth
+  - name: issues
+  - name: labels
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /auth:
+    get:
+      tags: [auth]
+      summary: List users
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDto'
+      responses:
+        '201':
+          description: User created
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDto'
+      responses:
+        '201':
+          description: User authenticated
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Get current user
+      security:
+        - accessTokenCookie: []
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Logout current user
+      security:
+        - accessTokenCookie: []
+      responses:
+        '201':
+          description: Cookie cleared
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /issues:
+    get:
+      tags: [issues]
+      summary: List issues (paginated)
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, default: 8 }
+        - in: query
+          name: term
+          schema: { type: string }
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: [created_at, updated_at, priority, status]
+        - in: query
+          name: sortDir
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: Paginated issues
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuesListResponse'
+
+    post:
+      tags: [issues]
+      summary: Create issue
+      security:
+        - accessTokenCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIssueDto'
+      responses:
+        '201':
+          description: Issue created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /issues/{id}:
+    get:
+      tags: [issues]
+      summary: Get issue by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Issue data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+
+    put:
+      tags: [issues]
+      summary: Update issue (creator scoped)
+      security:
+        - accessTokenCookie: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateIssueDto'
+      responses:
+        '200':
+          description: Issue updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      tags: [issues]
+      summary: Delete issue (creator scoped)
+      security:
+        - accessTokenCookie: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Issue deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /labels:
+    get:
+      tags: [labels]
+      summary: List labels
+      responses:
+        '200':
+          description: Label list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Label'
+
+    post:
+      tags: [labels]
+      summary: Create label
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLabelDto'
+      responses:
+        '201':
+          description: Label created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /labels/{id}:
+    delete:
+      tags: [labels]
+      summary: Delete label
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Label deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+components:
+  securitySchemes:
+    accessTokenCookie:
+      type: apiKey
+      in: cookie
+      name: access-token
+
+  responses:
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+      required: [ok]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          oneOf:
+            - type: string
+            - type: array
+              items: { type: string }
+      required: [message]
+
+    AuthUser:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+      required: [id, email]
+
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        password: { type: string }
+        created_at: { type: string, format: date-time }
+      required: [id, email]
+
+    LabelRef:
+      type: object
+      properties:
+        id: { type: string }
+      required: [id]
+
+    Label:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        color:
+          type: string
+          nullable: true
+      required: [id, title]
+
+    RegisterDto:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password:
+          type: string
+          minLength: 6
+          maxLength: 22
+      required: [email, password]
+
+    LoginDto:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password:
+          type: string
+          minLength: 6
+          maxLength: 22
+      required: [email, password]
+
+    CreateLabelDto:
+      type: object
+      properties:
+        title: { type: string }
+        color:
+          type: string
+          nullable: true
+      required: [title, color]
+
+    CreateIssueDto:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        status:
+          type: string
+          enum: [todo, in-progress, done, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        assignee_id:
+          type: string
+          nullable: true
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/LabelRef'
+      required: [title, description, status, priority]
+
+    UpdateIssueDto:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        status:
+          type: string
+          enum: [todo, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high]
+        assignee_id:
+          type: string
+          nullable: true
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/LabelRef'
+      required: [title, description, status, priority]
+
+    Issue:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description:
+          type: string
+          nullable: true
+        status: { type: string }
+        priority: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        creator_id: { type: string }
+        assignee_id:
+          type: string
+          nullable: true
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/Label'
+        creator:
+          $ref: '#/components/schemas/AuthUser'
+        assignee:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/AuthUser'
+      required: [id, title, status, priority, created_at, updated_at, creator_id]
+
+    IssuesListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Issue'
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+      required: [data, page, limit, total, totalPages]

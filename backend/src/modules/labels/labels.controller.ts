@@ -8,17 +8,16 @@ export class LabelsController {
 
   @Get()
   async getAll() {
-    const labels = await this.labelService.getAll();
-    return labels
+    return this.labelService.getAll();
   }
-1
+
   @Post()
   async create(@Body() body: CreateLabelDto) {
     return this.labelService.create(body);
   }
 
   @Delete(':id')
-  async deleteLabel(@Param() id:string) {
+  async deleteLabel(@Param('id') id: string) {
     return this.labelService.delete(id);
   }
 }

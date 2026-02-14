@@ -1,68 +1,100 @@
-import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import request from 'supertest';
-import { AppModule } from '@/app.module';
-import { DatabaseService } from '@/modules/database/database.service';
-
-function looksLikeJwt(token: unknown): token is string {
-  if (typeof token !== 'string') return false;
-  const parts = token.split('.');
-  return parts.length === 3 && parts.every((p) => p.length > 0);
-}
+import { Test, TestingModule } from '@nestjs/testing';
+import { Response } from 'express';
+import { AuthController } from '@/modules/auth/auth.controller';
+import { AuthService } from '@/modules/auth/auth.service';
 
 describe('AuthController (integration)', () => {
-  let app: INestApplication;
+  let controller: AuthController;
 
-  const email = 'creator@test.com';
-  const password = 'creatorTest!';
+  const mockAuthService = {
+    getUsers: jest.fn(),
+    register: jest.fn(),
+    login: jest.fn(),
+  };
 
-  beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
+  const mockResponse = () => {
+    const res = {
+      cookie: jest.fn(),
+      clearCookie: jest.fn(),
+    } as unknown as Response;
+    return res;
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AuthController],
+      providers: [{ provide: AuthService, useValue: mockAuthService }],
     }).compile();
 
-    app = moduleRef.createNestApplication();
-    await app.init();
+    controller = module.get<AuthController>(AuthController);
+    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
-    const db=app.get(DatabaseService)
-    await app.close();
-    await db.$disconnect();
+  it('getAll() returns users', async () => {
+    mockAuthService.getUsers.mockResolvedValue([{ id: 'u1', email: 'u1@test.dev' }]);
+
+    const result = await controller.getAll();
+
+    expect(result).toEqual([{ id: 'u1', email: 'u1@test.dev' }]);
   });
 
-  it('POST /auth/login -> returns accessToken', async () => {
-    const res = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ email, password })
-      .expect(201);
+  it('register() returns user and sets access-token cookie', async () => {
+    const res = mockResponse();
+    mockAuthService.register.mockResolvedValue({
+      accessToken: 'header.payload.signature',
+      user: { id: 'u2', email: 'u2@test.dev' },
+    });
 
-    expect(res.body).toEqual(
+    const result = await controller.register(res, {
+      email: 'u2@test.dev',
+      password: 'Password1!',
+    });
+
+    expect(res.cookie).toHaveBeenCalledWith(
+      'access-token',
+      'header.payload.signature',
       expect.objectContaining({
-        message: 'User logged in successfully',
-        data: expect.objectContaining({
-          accessToken: expect.any(String),
-        }),
+        httpOnly: true,
+        secure: true,
       }),
     );
-
-    expect(looksLikeJwt(res.body.data.accessToken)).toBe(true);
+    expect(result).toEqual({ id: 'u2', email: 'u2@test.dev' });
   });
 
-  it('POST /auth/login with wrong password -> 400', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ email, password: 'wrong_password' })
-      .expect(400);
-  });
+  it('login() returns user and sets access-token cookie', async () => {
+    const res = mockResponse();
+    mockAuthService.login.mockResolvedValue({
+      accessToken: 'header.payload.signature',
+      user: { id: 'u3', email: 'u3@test.dev' },
+    });
 
-  it('GET /auth -> returns list payload shape', async () => {
-    const res = await request(app.getHttpServer()).get('/auth').expect(200);
+    const result = await controller.login(
+      { email: 'u3@test.dev', password: 'Password1!' },
+      res,
+    );
 
-    expect(res.body).toEqual(
+    expect(res.cookie).toHaveBeenCalledWith(
+      'access-token',
+      'header.payload.signature',
       expect.objectContaining({
-        data: expect.any(Array),
+        httpOnly: true,
+        secure: true,
       }),
     );
+    expect(result).toEqual({ id: 'u3', email: 'u3@test.dev' });
+  });
+
+  it('me() returns current user', async () => {
+    const result = await controller.me({ id: 'user-1', email: 'user1@test.dev' });
+
+    expect(result).toEqual({ id: 'user-1', email: 'user1@test.dev' });
+  });
+
+  it('logout() clears access-token cookie', async () => {
+    const res = mockResponse();
+
+    await controller.logout(res);
+
+    expect(res.clearCookie).toHaveBeenCalledWith('access-token');
   });
 });

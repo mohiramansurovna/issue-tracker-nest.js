@@ -3,8 +3,9 @@ import { z } from 'zod';
 export const envConfigSchema = z.object({
   APP_PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string(),
-  AUTH_JWT_SECRET:z.string(),
-  AUTH_JWT_EXPIRES_IN:z.string(),
+  AUTH_JWT_SECRET: z.string(),
+  AUTH_JWT_EXPIRES_IN: z.string(),
+  CORS_ORIGINS: z.string(),
 });
 
 export type EnvConfig = z.infer<typeof envConfigSchema>;

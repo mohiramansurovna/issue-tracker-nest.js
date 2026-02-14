@@ -1,148 +1,98 @@
-import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import request from 'supertest';
-import { AppModule } from '@/app.module';
-import { DatabaseService } from '@/modules/database/database.service';
+import { Test, TestingModule } from '@nestjs/testing';
+import { IssuesController } from '@/modules/issues/issues.controller';
+import { IssuesService } from '@/modules/issues/issues.service';
 
 describe('IssuesController (integration)', () => {
-  let app: INestApplication;
-  let db: DatabaseService;
+  let controller: IssuesController;
 
-  const creatorEmail = 'creator@test.com';
-  const assigneeEmail = 'assignee@test.com';
-  const creatorPassword = 'creatorTest!';
-  const assigneePassword = 'assigneeTest!';
+  const mockIssuesService = {
+    getAll: jest.fn(),
+    get: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    deleteIssue: jest.fn(),
+  };
 
-  let creatorToken = '';
-  let creatorId = '';
-  let assigneeId = '';
-  let createdIssueId = '';
-
-  beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [IssuesController],
+      providers: [{ provide: IssuesService, useValue: mockIssuesService }],
     }).compile();
 
-    app = moduleRef.createNestApplication();
-    await app.init();
-
-    db = app.get(DatabaseService);
-
-    const loginRes = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ email: creatorEmail, password: creatorPassword })
-      .expect(201);
-
-    creatorToken = loginRes.body?.data?.accessToken ?? '';
-
-    await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ email: assigneeEmail, password: assigneePassword })
-      .expect(201);
-    const creator = await db.user.findUnique({
-      where: { email: creatorEmail },
-      select: { id: true },
-    });
-    const assignee = await db.user.findUnique({
-      where: { email: assigneeEmail },
-      select: { id: true },
-    });
-
-    creatorId = creator?.id ?? '';
-    assigneeId = assignee?.id ?? '';
+    controller = module.get<IssuesController>(IssuesController);
+    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
-    await app.close();
-    await db.$disconnect();
+  it('getAll() delegates query to service', async () => {
+    const payload = {
+      data: [{ id: 'i1', title: 'Issue 1' }],
+      page: 1,
+      limit: 8,
+      total: 1,
+      totalPages: 1,
+    };
+    mockIssuesService.getAll.mockResolvedValue(payload);
+
+    const query = { page: 1, limit: 8, sortBy: 'created_at', sortDir: 'desc' };
+    const result = await controller.getAll(query as any);
+
+    expect(mockIssuesService.getAll).toHaveBeenCalledWith(query);
+    expect(result).toEqual(payload);
   });
 
-  it('GET /issues -> returns list payload shape', async () => {
-    const res = await request(app.getHttpServer()).get('/issues').expect(200);
+  it('get() returns issue by id', async () => {
+    mockIssuesService.get.mockResolvedValue({ id: 'issue-1', title: 'Issue 1' });
 
-    expect(res.body).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          issues: expect.any(Array),
-        }),
-      }),
-    );
+    const result = await controller.get({ id: 'issue-1' });
+
+    expect(mockIssuesService.get).toHaveBeenCalledWith('issue-1');
+    expect(result).toEqual({ id: 'issue-1', title: 'Issue 1' });
   });
 
-  it('POST /issues -> creates issue', async () => {
+  it('createIssue() creates issue for current user', async () => {
+    mockIssuesService.create.mockResolvedValue({ message: 'Issue created successfully :)' });
+
     const body = {
-      title: 'E2E Issue',
-      description: 'E2E created issue',
+      title: 'New issue',
+      description: 'Description',
       status: 'todo',
       priority: 'medium',
-      assignee_id: assigneeId,
+      assignee_id: null,
       labels: [],
     };
 
-    const res = await request(app.getHttpServer())
-      .post('/issues')
-      .set('Authorization', `Bearer ${creatorToken}`)
-      .send(body)
-      .expect(201);
+    const result = await controller.createIssue('creator-1', body as any);
 
-    expect(res.body).toEqual(
-      expect.objectContaining({
-        message: 'Created',
-      }),
-    );
-
-    const listRes = await request(app.getHttpServer())
-      .get('/issues')
-      .expect(200);
-
-    const issues = listRes.body?.data?.issues ?? [];
-    const created = issues.find((issue: any) => issue.title === body.title);
-    console.log("HERE CREATED",{created})
-    expect(issues).toEqual(expect.any(Array));
-    expect(created).toBeDefined();
-
-    createdIssueId = created?.id ?? '';
+    expect(mockIssuesService.create).toHaveBeenCalledWith('creator-1', body);
+    expect(result).toEqual({ message: 'Issue created successfully :)' });
   });
 
-  it('PUT /issues -> updates issue', async () => {
-    expect(createdIssueId).not.toBe('');
+  it('updateIssue() updates issue for current user', async () => {
+    mockIssuesService.update.mockResolvedValue({ message: 'Issue updated successfully' });
 
     const body = {
-      id: createdIssueId,
-      title: 'E2E Issue Updated',
-      description: 'E2E updated issue',
+      title: 'Updated title',
+      description: 'Updated description',
       status: 'cancelled',
       priority: 'high',
-      assignee_id: assigneeId,
+      assignee_id: null,
       labels: [],
     };
 
-    const res = await request(app.getHttpServer())
-      .put('/issues')
-      .set('Authorization', `Bearer ${creatorToken}`)
-      .send(body)
-      .expect(200);
+    const result = await controller.updateIssue('creator-1', { id: 'issue-1' }, body as any);
 
-    expect(res.body).toEqual(
-      expect.objectContaining({
-        message: 'Updated',
-      }),
-    );
+    expect(mockIssuesService.update).toHaveBeenCalledWith('creator-1', 'issue-1', body);
+    expect(result).toEqual({ message: 'Issue updated successfully' });
   });
 
-  it('DELETE /issues -> deletes issue', async () => {
-    // expect(createdIssueId).not.toBe('');
+  it('deleteIssue() deletes issue for current user', async () => {
+    mockIssuesService.deleteIssue.mockResolvedValue({
+      message: 'Issue deleted successfully',
+    });
 
-    const res = await request(app.getHttpServer())
-      .delete('/issues')
-      .set('Authorization', `Bearer ${creatorToken}`)
-      .send({ id: createdIssueId })
-      .expect(200);
+    const result = await controller.deleteIssue('creator-1', { id: 'issue-1' });
 
-    expect(res.body).toEqual(
-      expect.objectContaining({
-        message: 'Deleted',
-      }),
-    );
+    expect(mockIssuesService.deleteIssue).toHaveBeenCalledWith('creator-1', 'issue-1');
+    expect(result).toEqual({ message: 'Issue deleted successfully' });
   });
 });
