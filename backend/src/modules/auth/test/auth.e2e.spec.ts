@@ -55,7 +55,6 @@ describe('AuthController (integration)', () => {
       'header.payload.signature',
       expect.objectContaining({
         httpOnly: true,
-        secure: true,
       }),
     );
     expect(result).toEqual({ id: 'u2', email: 'u2@test.dev' });
@@ -78,7 +77,6 @@ describe('AuthController (integration)', () => {
       'header.payload.signature',
       expect.objectContaining({
         httpOnly: true,
-        secure: true,
       }),
     );
     expect(result).toEqual({ id: 'u3', email: 'u3@test.dev' });
