@@ -5,7 +5,9 @@ export const envConfigSchema = z.object({
   DATABASE_URL: z.string(),
   AUTH_JWT_SECRET: z.string(),
   AUTH_JWT_EXPIRES_IN: z.string(),
-  CORS_ORIGINS: z.string(),
+  CORS_ORIGINS: z
+    .string()
+    .default('http://localhost:5173,http://127.0.0.1:5173'),
 });
 
 export type EnvConfig = z.infer<typeof envConfigSchema>;

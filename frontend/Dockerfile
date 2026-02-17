@@ -15,6 +15,8 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
 # ---------- build ----------
 FROM node:20-alpine AS build
 WORKDIR /app
+ARG VITE_BACKEND_URL=http://localhost:8050
+ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

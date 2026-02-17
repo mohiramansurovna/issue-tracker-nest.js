@@ -25,7 +25,8 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/app?schema=public
       AUTH_JWT_SECRET: prod_secret_change_me
       AUTH_JWT_EXPIRES_IN: 7h
-      NODE_ENV: production
+      CORS_ORIGINS: http://localhost:8080,http://127.0.0.1:8080,https://issue-tracker-nest-js.vercel.app
+
     ports:
       - "8050:8050"
     depends_on:
@@ -36,6 +37,8 @@ services:
     build:
       context: ./frontend
       target: prod
+      args:
+        VITE_BACKEND_URL: http://localhost:8050
     ports:
       - "8080:80"
     depends_on:

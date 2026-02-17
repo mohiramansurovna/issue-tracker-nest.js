@@ -25,16 +25,15 @@ async function bootstrap() {
   app.useGlobalPipes(ValidationConfig);
 
   const origins = parseOrigins(
-    configService.get("CORS_ORIGINS", { infer: true }),
-  ) || ['http://localhost:5173', 'http://127.0.0.1:5173'];
+    configService.get('CORS_ORIGINS', { infer: true }),
+  );
+  const corsOrigins =
+    origins.length > 0
+      ? origins
+      : ['http://localhost:5173', 'http://127.0.0.1:5173'];
 
   app.enableCors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true);
-      return origins.includes(origin)
-        ? cb(null, true)
-        : cb(new Error(`CORS blocked for origin: ${origin}`), false);
-    },
+    origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
