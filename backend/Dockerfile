@@ -25,4 +25,4 @@ COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 
 EXPOSE 8050
-CMD sh -c "npx prisma migrate deploy && node dist/main"
+CMD sh -c "npx prisma migrate deploy && node dist/src/main"
