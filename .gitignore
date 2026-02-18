@@ -57,7 +57,7 @@ frontend/.vite/
 
 # ===== Docker (optional) =====
 **/.dockerignore
-docker-compose.**.yml
+docker-compose.**
 
 # ===== Runtime uploads (if any) =====
 uploads/
