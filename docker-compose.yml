@@ -19,7 +19,7 @@ services:
       target: prod
     environment:
       APP_PORT: 8050
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/app?schema=public
+      DATABASE_URL: postgresql://neondb_owner:npg_RDXSENUe8QW2@ep-curly-heart-ai4436r5-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       AUTH_JWT_SECRET: dev_secret
       AUTH_JWT_EXPIRES_IN: 7h
       CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://web:5173

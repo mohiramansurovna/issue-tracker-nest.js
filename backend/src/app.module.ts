@@ -19,6 +19,6 @@ import { LabelsModule } from './modules/labels/labels.module';
     IssuesModule,
     LabelsModule
   ],
-  // controllers:[AppController]
+  controllers:[AppController]
 })
 export class AppModule{}
