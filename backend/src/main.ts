@@ -39,6 +39,7 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
+  app.set('trust proxy', 1);
   const appPort = configService.get('APP_PORT', { infer: true });
   await app.listen(appPort, '0.0.0.0');
 }
