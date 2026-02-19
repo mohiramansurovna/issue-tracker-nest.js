@@ -31,7 +31,7 @@ async function bootstrap() {
   const corsOrigins =
     origins.length > 0
       ? origins
-      : ['https://issue-tracker-nest-js.vercel.app/'];
+      : ['https://issue-tracker-nest-js.vercel.app'];
 
   app.enableCors({
     origin: corsOrigins,
