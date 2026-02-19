@@ -31,7 +31,7 @@ async function bootstrap() {
   const corsOrigins =
     origins.length > 0
       ? origins
-      : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+      : ['https://issue-tracker-nest-js.vercel.app/'];
 
   app.enableCors({
     origin: corsOrigins,
