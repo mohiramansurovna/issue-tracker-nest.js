@@ -7,6 +7,7 @@ import { AppModule } from './app.module.js';
 import { EnvConfig } from './shared/configs/env.config.js';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter.js';
 import { ValidationConfig } from './shared/configs/validation.config.js';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 function parseOrigins(value?: string) {
   return (value ?? '')
@@ -16,7 +17,7 @@ function parseOrigins(value?: string) {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService<EnvConfig, true>);
 
   app.use(cookieParser());
